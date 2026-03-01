@@ -1,0 +1,83 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    realname: 'User'
+    hostname: ubuntu-desktop
+    username: userubuntu
+    password: '$y$j9T$uhkxlm8nUQaNu.6rl4k2d.$DIldpYy96OHg8lFjfXfc671BZcGWkPOmaDONGAhGSg3'
+  locale: pt_BR.utf8
+  keyboard:
+    layout: br
+  timezone: "America/Sao_Paulo"
+  packages:
+    - libreoffice
+    - gimp
+    - git
+    - wget
+    - zip
+    - unzip
+    - rar
+    - unrar
+    - p7zip-full
+    - gedit
+    - curl
+    - gdebi-core
+  snaps:
+    - name: spotify
+      channel: stable
+      classic: false
+    - name: youtube-music
+      channel: stable
+      classic: false
+    - name: github-desktop
+      channel: stable
+      classic: false
+  runcmd:
+    # Criar diretórios para ícones e atalhos
+    - mkdir -p /home/userubuntu/.local/share/icons
+    - mkdir -p /home/userubuntu/.local/share/applications
+    - mkdir -p /home/userubuntu/Desktop
+
+    # Baixar ícones de alta resolução
+    - curl -L -o /home/userubuntu/.local/share/icons/instagram.png https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/256px-Instagram_logo_2016.svg.png
+    - curl -L -o /home/userubuntu/.local/share/icons/facebook.png https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/256px-Facebook_Logo_%282019%29.png
+    - curl -L -o /home/userubuntu/.local/share/icons/youtube.png https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/YouTube_icon_%282013-2017%29.png/256px-YouTube_icon_%282013-2017%29.png
+    - curl -L -o /home/userubuntu/.local/share/icons/youtube-music.png https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/YouTube_Music_icon.svg/256px-YouTube_Music_icon.svg.png
+
+    # Criar atalhos para Instagram, Facebook e YouTube (desktop + menu) com ícones
+    - |
+      for APP in Instagram Facebook YouTube; do
+        ICON="/home/userubuntu/.local/share/icons/${APP,,}.png"
+        URL="https://www.${APP,,}.com/"
+        if [ "$APP" = "YouTube" ]; then URL="https://www.youtube.com/"; fi
+        DESKTOP="/home/userubuntu/Desktop/${APP}.desktop"
+        MENU="/home/userubuntu/.local/share/applications/${APP}.desktop"
+        echo "[Desktop Entry]
+        Name=${APP}
+        Comment=Acessar ${APP}
+        Exec=xdg-open ${URL}
+        Icon=${ICON}
+        Terminal=false
+        Type=Application
+        Categories=Network;" > $DESKTOP
+        cp $DESKTOP $MENU
+      done
+
+    # Ajustar permissões
+    - chown -R userubuntu:userubuntu /home/userubuntu/Desktop
+    - chmod +x /home/userubuntu/Desktop/*.desktop
+    - chown -R userubuntu:userubuntu /home/userubuntu/.local/share/applications
+    - chmod +x /home/userubuntu/.local/share/applications/*.desktop
+    - chown -R userubuntu:userubuntu /home/userubuntu/.local/share/icons
+
+    # Baixar e instalar WhatsApp Desktop oficial
+    - wget -O /tmp/whatsapp.deb https://web.whatsapp.com/desktop/linux/latest/amd64
+    - gdebi -n /tmp/whatsapp.deb
+
+  codecs:
+    install: true
+  drivers:
+    install: true
+  updates: all
+  shutdown: reboot
